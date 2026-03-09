@@ -558,8 +558,14 @@ textarea { resize: vertical; }
 .vis-item.circa.vis-box   { border-style: dashed !important; }
 .vis-item.circa.vis-range { border-style: dashed !important; }
 
-/* Current time bar */
-.vis-current-time { background: var(--accent) !important; width: 2px !important; }
+/* BCE/CE boundary reference line — subtle, non-interactive */
+.vis-custom-time {
+  background: rgba(255, 255, 255, 0.18) !important;
+  width: 1px !important;
+  pointer-events: none !important;
+  cursor: default !important;
+}
+.vis-custom-time .vis-custom-time-marker { display: none !important; }
 
 /* ─── MultiSelect ───────────────────────────────────────────────────────────── */
 .ms { display: flex; flex-direction: column; gap: 0.3rem; position: relative; }

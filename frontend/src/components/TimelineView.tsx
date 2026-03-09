@@ -50,6 +50,7 @@ export function TimelineView({ events, regions, categories }: Props) {
         start:           yearToDate(-600),
         end:             yearToDate(2100),
         minHeight:       200,
+        showCurrentTime: false,
         tooltip:         { followMouse: false, overflowMethod: 'cap' },
         format: {
           minorLabels: formatMinorLabel,
@@ -68,6 +69,9 @@ export function TimelineView({ events, regions, categories }: Props) {
       const domEvent = props.event as MouseEvent | undefined;
       setPopover({ event: found, x: domEvent?.pageX ?? 0, y: domEvent?.pageY ?? 0 });
     });
+
+    // BCE/CE boundary marker at year 1 CE — non-interactive reference line
+    tl.addCustomTime(yearToDate(1), 'bce-ce');
 
     timelineRef.current = tl;
     return () => { tl.destroy(); timelineRef.current = null; fittedRef.current = false; };
