@@ -340,7 +340,7 @@ textarea { resize: vertical; }
 .cms-create { color: var(--accent); font-style: italic; }
 
 /* ─── Timeline pane ─────────────────────────────────────────────────────────── */
-.app-body--timeline { overflow: hidden; }
+.app-body--timeline { overflow: hidden; height: calc(100vh - var(--header-h)); }
 .timeline-pane {
   flex: 1;
   display: flex;

@@ -55,7 +55,7 @@ export function TimelineView({ events, regions, categories }: Props) {
         zoomMax:         MS_PER_YEAR * 15000,   // can zoom out to ~15 000-year window
         start:           yearToDate(-600),
         end:             yearToDate(2100),
-        maxHeight:       '100%',
+        height:          '100%',
         tooltip:         { followMouse: false, overflowMethod: 'cap' },
         format: {
           minorLabels: formatMinorLabel,
