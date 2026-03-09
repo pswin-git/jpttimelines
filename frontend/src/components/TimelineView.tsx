@@ -89,8 +89,10 @@ export function TimelineView({ events, regions, categories }: Props) {
       events, groupBy, colorBy, regions, categories, catColorMap, regColorMap,
     );
 
+    // Pass null (not []) when ungrouped — an empty array keeps vis-timeline in
+    // grouped mode and hides items that have no group property.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tl.setGroups(groups as any);
+    tl.setGroups((groups.length ? groups : null) as any);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tl.setItems(items as any);
 
