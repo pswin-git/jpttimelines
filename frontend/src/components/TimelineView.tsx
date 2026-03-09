@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Timeline } from 'vis-timeline/standalone';
-import { DataSet } from 'vis-data/standalone';
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
 import type { TimelineEvent, Region, Category } from '../types';
 import { TimelinePopover } from './TimelinePopover';
@@ -22,10 +21,6 @@ const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 export function TimelineView({ events, regions, categories }: Props) {
   const containerRef  = useRef<HTMLDivElement>(null);
   const timelineRef   = useRef<InstanceType<typeof Timeline> | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const itemsDs       = useRef(new DataSet<any>([]));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const groupsDs      = useRef(new DataSet<any>([]));
 
   // Stable ref so the one-time click handler can always read current events
   const eventsRef     = useRef(events);
@@ -39,20 +34,19 @@ export function TimelineView({ events, regions, categories }: Props) {
   const fittedRef = useRef(false);
 
   // ── Initialize vis-timeline once ─────────────────────────────────────────
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return;
 
     const tl = new Timeline(
       containerRef.current,
-      itemsDs.current,
-      groupsDs.current,
+      [],
       {
         orientation:     { axis: 'top' },
         stack:           true,
         moveable:        true,
         zoomable:        true,
-        zoomMin:         MS_PER_YEAR * 10,      // can zoom to a ~10-year window
-        zoomMax:         MS_PER_YEAR * 15000,   // can zoom out to ~15 000-year window
+        zoomMin:         MS_PER_YEAR * 10,
+        zoomMax:         MS_PER_YEAR * 15000,
         start:           yearToDate(-600),
         end:             yearToDate(2100),
         height:          '100%',
@@ -69,18 +63,21 @@ export function TimelineView({ events, regions, categories }: Props) {
       if (!props.item) { setPopover(null); return; }
       const itemId  = String(props.item);
       const eventId = parseInt(itemId.split('-')[1], 10);
-      const event   = eventsRef.current.find(e => e.id === eventId);
-      if (!event) return;
+      const found   = eventsRef.current.find(e => e.id === eventId);
+      if (!found) return;
       const domEvent = props.event as MouseEvent | undefined;
-      setPopover({ event, x: domEvent?.pageX ?? 0, y: domEvent?.pageY ?? 0 });
+      setPopover({ event: found, x: domEvent?.pageX ?? 0, y: domEvent?.pageY ?? 0 });
     });
 
     timelineRef.current = tl;
     return () => { tl.destroy(); timelineRef.current = null; fittedRef.current = false; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- one-time init
 
   // ── Rebuild items / groups whenever data or view settings change ──────────
   useEffect(() => {
+    const tl = timelineRef.current;
+    if (!tl) return;
+
     const catColorMap = buildColorMap(
       [...categories].sort((a, b) => a.id - b.id).map(c => c.id), CAT_PALETTE,
     );
@@ -92,18 +89,18 @@ export function TimelineView({ events, regions, categories }: Props) {
       events, groupBy, colorBy, regions, categories, catColorMap, regColorMap,
     );
 
-    itemsDs.current.clear();
-    groupsDs.current.clear();
-    if (items.length)  itemsDs.current.add(items);
-    if (groups.length) groupsDs.current.add(groups);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tl.setGroups(groups as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tl.setItems(items as any);
 
     // Fit to the actual data on first load only
-    if (events.length > 0 && timelineRef.current && !fittedRef.current) {
+    if (events.length > 0 && !fittedRef.current) {
       fittedRef.current = true;
       const minYear = Math.min(...events.map(e => e.start_year));
       const maxYear = Math.max(...events.map(e => e.end_year ?? e.start_year));
       const pad     = Math.max(50, (maxYear - minYear) * 0.05);
-      timelineRef.current.setWindow(
+      tl.setWindow(
         yearToDate(minYear - pad),
         yearToDate(maxYear + pad),
         { animation: false },

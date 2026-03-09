@@ -39,23 +39,32 @@ export function formatEventDate(
 }
 
 // ─── vis-timeline axis label formatters ─────────────────────────────────────
-export function formatMinorLabel(date: Date, scale: string): string {
-  const year = internalYearToDisplay(date.getFullYear());
+// vis-timeline/standalone passes moment.js objects (not plain Date) to format functions.
+// Convert to a plain Date first via .toDate() if available.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toPlainDate(d: any): Date {
+  return typeof d?.toDate === 'function' ? d.toDate() : (d as Date);
+}
+
+export function formatMinorLabel(date: unknown, scale: string): string {
+  const d = toPlainDate(date);
+  const year = internalYearToDisplay(d.getFullYear());
   switch (scale) {
     case 'year':    return formatYear(year);
-    case 'month':   return MONTH_SHORT[date.getMonth()];
+    case 'month':   return MONTH_SHORT[d.getMonth()];
     case 'day':
-    case 'weekday': return String(date.getDate());
+    case 'weekday': return String(d.getDate());
     default:        return '';
   }
 }
 
-export function formatMajorLabel(date: Date, scale: string): string {
-  const year = internalYearToDisplay(date.getFullYear());
+export function formatMajorLabel(date: unknown, scale: string): string {
+  const d = toPlainDate(date);
+  const year = internalYearToDisplay(d.getFullYear());
   switch (scale) {
     case 'day':
     case 'weekday':
-    case 'month': return `${MONTH_SHORT[date.getMonth()]} ${formatYear(year)}`;
+    case 'month': return `${MONTH_SHORT[d.getMonth()]} ${formatYear(year)}`;
     default:      return '';
   }
 }

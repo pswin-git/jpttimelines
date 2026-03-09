@@ -21,20 +21,21 @@
 
 /* ─── Reset ─────────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   font-size: 14px;
   line-height: 1.6;
-  min-height: 100vh;
 }
+#root { height: 100%; display: flex; flex-direction: column; }
 button { cursor: pointer; font: inherit; border: none; background: none; }
 input, textarea, select { font: inherit; color: inherit; }
 ul { list-style: none; }
 
 /* ─── Layout ────────────────────────────────────────────────────────────────── */
-.app { display: flex; flex-direction: column; min-height: 100vh; }
+.app { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
 .app-header {
   height: var(--header-h);
@@ -340,7 +341,7 @@ textarea { resize: vertical; }
 .cms-create { color: var(--accent); font-style: italic; }
 
 /* ─── Timeline pane ─────────────────────────────────────────────────────────── */
-.app-body--timeline { overflow: hidden; height: calc(100vh - var(--header-h)); }
+.app-body--timeline { overflow: hidden; }
 .timeline-pane {
   flex: 1;
   display: flex;
