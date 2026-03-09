@@ -3,11 +3,12 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.crud import event as crud
 from app.database import get_db
 from app.schemas.event import EventCreate, EventOut, EventUpdate
 
-router = APIRouter(prefix="/events", tags=["events"])
+router = APIRouter(prefix="/events", tags=["events"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=List[EventOut])

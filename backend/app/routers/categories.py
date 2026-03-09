@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.crud import category as crud
 from app.database import get_db
 from app.schemas.category import CategoryCreate, CategoryOut, CategoryUpdate
 
-router = APIRouter(prefix="/categories", tags=["categories"])
+router = APIRouter(prefix="/categories", tags=["categories"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=List[CategoryOut])

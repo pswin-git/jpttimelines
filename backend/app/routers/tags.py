@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.crud import tag as crud
 from app.database import get_db
 from app.schemas.tag import TagCreate, TagOut, TagUpdate
 
-router = APIRouter(prefix="/tags", tags=["tags"])
+router = APIRouter(prefix="/tags", tags=["tags"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=List[TagOut])

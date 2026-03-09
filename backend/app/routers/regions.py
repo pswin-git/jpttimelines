@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.crud import region as crud
 from app.database import get_db
 from app.schemas.region import RegionCreate, RegionOut, RegionUpdate
 
-router = APIRouter(prefix="/regions", tags=["regions"])
+router = APIRouter(prefix="/regions", tags=["regions"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/", response_model=List[RegionOut])
