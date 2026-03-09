@@ -8,9 +8,10 @@ interface Props {
   categories: Category[];
   tags: Tag[];
   onClear: () => void;
+  mobileOpen: boolean;
 }
 
-export function FilterSidebar({ filters, onChange, regions, categories, tags, onClear }: Props) {
+export function FilterSidebar({ filters, onChange, regions, categories, tags, onClear, mobileOpen }: Props) {
   function set<K extends keyof Filters>(key: K, value: Filters[K]) {
     onChange({ ...filters, [key]: value });
   }
@@ -24,7 +25,7 @@ export function FilterSidebar({ filters, onChange, regions, categories, tags, on
     filters.tag_ids.length > 0;
 
   return (
-    <aside className="filter-sidebar">
+    <aside className={`filter-sidebar${mobileOpen ? ' filter-sidebar--open' : ''}`}>
       <div className="filter-sidebar-header">
         <h2>Filters</h2>
         {hasFilters && (

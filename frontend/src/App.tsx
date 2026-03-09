@@ -36,6 +36,7 @@ function MainView({ onLogout }: { onLogout: () => void }) {
   const [modalEvent,  setModalEvent]  = useState<TimelineEvent | null | 'new'>(null);
   const [deleteTarget,setDeleteTarget]= useState<TimelineEvent | null>(null);
   const [deleting,    setDeleting]    = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([regionsApi.list(), categoriesApi.list(), tagsApi.list()])
@@ -52,6 +53,9 @@ function MainView({ onLogout }: { onLogout: () => void }) {
   }, [filters]);
 
   useEffect(() => { loadEvents(); }, [loadEvents]);
+
+  // Close mobile sidebar when switching views
+  useEffect(() => { setSidebarOpen(false); }, [view]);
 
   function handleSaved(saved: TimelineEvent) {
     setEvents(prev => {
@@ -77,11 +81,24 @@ function MainView({ onLogout }: { onLogout: () => void }) {
     return [...list, item].sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  const hasFilters =
+    filters.search || filters.start_year || filters.end_year ||
+    filters.region_ids.length || filters.category_ids.length || filters.tag_ids.length;
+
   return (
     <div className="app">
       <header className="app-header">
         <h1 className="app-logo">JPT Timelines</h1>
         <div className="app-header-actions">
+
+          {/* Mobile filter toggle */}
+          <button
+            className={`btn btn-sm mobile-filter-btn ${sidebarOpen ? 'btn-primary' : ''}`}
+            onClick={() => setSidebarOpen(o => !o)}
+            aria-label="Toggle filters"
+          >
+            {hasFilters ? '⚙ Filters ●' : '⚙ Filters'}
+          </button>
 
           {/* View toggle */}
           <div className="tl-btn-group">
@@ -99,7 +116,7 @@ function MainView({ onLogout }: { onLogout: () => void }) {
             </button>
           </div>
 
-          <button className="btn btn-primary" onClick={() => setModalEvent('new')}>
+          <button className="btn btn-primary btn-new-event" onClick={() => setModalEvent('new')}>
             + New Event
           </button>
           <button className="btn-link" onClick={onLogout}>Log out</button>
@@ -109,23 +126,45 @@ function MainView({ onLogout }: { onLogout: () => void }) {
       <div className={`app-body ${view === 'timeline' ? 'app-body--timeline' : ''}`}>
         <FilterSidebar
           filters={filters}
-          onChange={setFilters}
+          onChange={f => { setFilters(f); setSidebarOpen(false); }}
           regions={regions}
           categories={categories}
           tags={tags}
-          onClear={() => setFilters(EMPTY_FILTERS)}
+          onClear={() => { setFilters(EMPTY_FILTERS); setSidebarOpen(false); }}
+          mobileOpen={sidebarOpen}
         />
 
         {view === 'list' ? (
           <main className="event-list">
-            {loading   && <p className="status-msg">Loading…</p>}
-            {fetchError && <p className="status-msg status-error">{fetchError}</p>}
+            {loading && (
+              <div className="status-loading">
+                <span className="spinner" />
+                Loading events…
+              </div>
+            )}
+            {!loading && fetchError && (
+              <div className="status-error-box">
+                <strong>Failed to load events</strong>
+                <p>{fetchError}</p>
+                <button className="btn btn-sm" onClick={loadEvents}>Retry</button>
+              </div>
+            )}
             {!loading && !fetchError && events.length === 0 && (
               <div className="empty-state">
-                <p>No events found.</p>
-                <button className="btn btn-primary" onClick={() => setModalEvent('new')}>
-                  Create the first one
-                </button>
+                {hasFilters
+                  ? <>
+                      <p>No events match the current filters.</p>
+                      <button className="btn" onClick={() => setFilters(EMPTY_FILTERS)}>
+                        Clear filters
+                      </button>
+                    </>
+                  : <>
+                      <p>No events yet.</p>
+                      <button className="btn btn-primary" onClick={() => setModalEvent('new')}>
+                        Create the first one
+                      </button>
+                    </>
+                }
               </div>
             )}
             {events.map(event => (
@@ -139,8 +178,19 @@ function MainView({ onLogout }: { onLogout: () => void }) {
           </main>
         ) : (
           <div className="timeline-pane">
-            {loading    && <p className="status-msg">Loading…</p>}
-            {fetchError && <p className="status-msg status-error">{fetchError}</p>}
+            {loading && (
+              <div className="status-loading">
+                <span className="spinner" />
+                Loading events…
+              </div>
+            )}
+            {!loading && fetchError && (
+              <div className="status-error-box">
+                <strong>Failed to load events</strong>
+                <p>{fetchError}</p>
+                <button className="btn btn-sm" onClick={loadEvents}>Retry</button>
+              </div>
+            )}
             {!loading && !fetchError && (
               <TimelineView
                 events={events}

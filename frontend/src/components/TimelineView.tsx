@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Timeline } from 'vis-timeline/standalone';
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
+import html2canvas from 'html2canvas';
+import { toSvg } from 'html-to-image';
 import type { TimelineEvent, Region, Category } from '../types';
 import { TimelinePopover } from './TimelinePopover';
 import {
@@ -20,17 +22,17 @@ const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 
 export function TimelineView({ events, regions, categories }: Props) {
   const containerRef  = useRef<HTMLDivElement>(null);
+  const exportRef     = useRef<HTMLDivElement>(null);
   const timelineRef   = useRef<InstanceType<typeof Timeline> | null>(null);
 
-  // Stable ref so the one-time click handler can always read current events
-  const eventsRef     = useRef(events);
+  const eventsRef = useRef(events);
   useEffect(() => { eventsRef.current = events; }, [events]);
 
-  const [groupBy,   setGroupBy]   = useState<GroupBy>('none');
-  const [colorBy,   setColorBy]   = useState<ColorBy>('category');
-  const [popover,   setPopover]   = useState<{ event: TimelineEvent; x: number; y: number } | null>(null);
+  const [groupBy,    setGroupBy]   = useState<GroupBy>('none');
+  const [colorBy,    setColorBy]   = useState<ColorBy>('category');
+  const [popover,    setPopover]   = useState<{ event: TimelineEvent; x: number; y: number } | null>(null);
+  const [exporting,  setExporting] = useState<'png' | 'svg' | null>(null);
 
-  // Whether we've ever fit the window (don't auto-fit after first load)
   const fittedRef = useRef(false);
 
   // ── Initialize vis-timeline once ─────────────────────────────────────────
@@ -59,7 +61,6 @@ export function TimelineView({ events, regions, categories }: Props) {
       },
     );
 
-    // Stable click handler — reads eventsRef so it never goes stale
     tl.on('click', (props: Record<string, unknown>) => {
       if (!props.item) { setPopover(null); return; }
       const itemId  = String(props.item);
@@ -70,12 +71,11 @@ export function TimelineView({ events, regions, categories }: Props) {
       setPopover({ event: found, x: domEvent?.pageX ?? 0, y: domEvent?.pageY ?? 0 });
     });
 
-    // BCE/CE boundary marker at year 1 CE — non-interactive reference line
     tl.addCustomTime(yearToDate(1), 'bce-ce');
 
     timelineRef.current = tl;
     return () => { tl.destroy(); timelineRef.current = null; fittedRef.current = false; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- one-time init
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Rebuild items / groups whenever data or view settings change ──────────
   useEffect(() => {
@@ -93,38 +93,63 @@ export function TimelineView({ events, regions, categories }: Props) {
       events, groupBy, colorBy, regions, categories, catColorMap, regColorMap,
     );
 
-    // Pass null (not []) when ungrouped — an empty array keeps vis-timeline in
-    // grouped mode and hides items that have no group property.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tl.setGroups((groups.length ? groups : null) as any);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tl.setItems(items as any);
 
-    // Fit to the actual data on first load only
     if (events.length > 0 && !fittedRef.current) {
       fittedRef.current = true;
       const minYear = Math.min(...events.map(e => e.start_year));
       const maxYear = Math.max(...events.map(e => e.end_year ?? e.start_year));
       const pad     = Math.max(50, (maxYear - minYear) * 0.05);
-      tl.setWindow(
-        yearToDate(minYear - pad),
-        yearToDate(maxYear + pad),
-        { animation: false },
-      );
+      tl.setWindow(yearToDate(minYear - pad), yearToDate(maxYear + pad), { animation: false });
     }
   }, [events, groupBy, colorBy, regions, categories]);
 
-  // ── Fit button handler ────────────────────────────────────────────────────
+  // ── Fit button ────────────────────────────────────────────────────────────
   function fitAll() {
     if (!timelineRef.current || events.length === 0) return;
     const minYear = Math.min(...events.map(e => e.start_year));
     const maxYear = Math.max(...events.map(e => e.end_year ?? e.start_year));
     const pad     = Math.max(50, (maxYear - minYear) * 0.05);
     timelineRef.current.setWindow(
-      yearToDate(minYear - pad),
-      yearToDate(maxYear + pad),
+      yearToDate(minYear - pad), yearToDate(maxYear + pad),
       { animation: { duration: 400, easingFunction: 'easeInOutQuad' } },
     );
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────
+  async function exportPng() {
+    if (!exportRef.current || exporting) return;
+    setExporting('png');
+    try {
+      const canvas = await html2canvas(exportRef.current, { backgroundColor: '#0f1117', scale: 2 });
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'timeline.png';
+      a.click();
+    } catch (e) {
+      console.error('PNG export failed', e);
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  async function exportSvg() {
+    if (!exportRef.current || exporting) return;
+    setExporting('svg');
+    try {
+      const dataUrl = await toSvg(exportRef.current, { backgroundColor: '#0f1117' });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'timeline.svg';
+      a.click();
+    } catch (e) {
+      console.error('SVG export failed', e);
+    } finally {
+      setExporting(null);
+    }
   }
 
   // ── Legend ────────────────────────────────────────────────────────────────
@@ -141,7 +166,6 @@ export function TimelineView({ events, regions, categories }: Props) {
 
       {/* ── Controls ── */}
       <div className="tl-controls">
-
         <div className="tl-control-group">
           <span className="tl-control-label">View</span>
           <div className="tl-btn-group">
@@ -172,35 +196,62 @@ export function TimelineView({ events, regions, categories }: Props) {
           </div>
         </div>
 
-        <button className="btn btn-sm" onClick={fitAll} title="Fit all events in view">
+        <button className="btn btn-sm" onClick={fitAll} disabled={events.length === 0}>
           Fit all
         </button>
-      </div>
 
-      {/* ── Timeline canvas ── */}
-      <div className="tl-canvas-wrap">
-        <div ref={containerRef} className="tl-canvas" />
-      </div>
-
-      {/* ── Legend ── */}
-      {legendItems.length > 0 && (
-        <div className="tl-legend">
-          <span className="tl-control-label">
-            Color = {colorBy === 'category' ? 'category' : 'region'}
-          </span>
-          <div className="tl-legend-items">
-            {legendItems.map(({ label, color }) => (
-              <span key={label} className="tl-legend-item">
-                <span className="tl-legend-dot" style={{ background: color }} />
-                {label}
-              </span>
-            ))}
-          </div>
-          <span className="tl-circa-note">* approximate date</span>
+        <div className="tl-export-group">
+          <span className="tl-control-label">Export</span>
+          <button
+            className="btn btn-sm"
+            onClick={exportPng}
+            disabled={!!exporting || events.length === 0}
+            title="Export as PNG image"
+          >
+            {exporting === 'png' ? 'Saving…' : 'PNG'}
+          </button>
+          <button
+            className="btn btn-sm"
+            onClick={exportSvg}
+            disabled={!!exporting || events.length === 0}
+            title="Export as SVG"
+          >
+            {exporting === 'svg' ? 'Saving…' : 'SVG'}
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* ── Click popover ── */}
+      {/* ── Exportable area: canvas + legend ── */}
+      <div ref={exportRef}>
+        <div className="tl-canvas-wrap">
+          {events.length === 0
+            ? (
+              <div className="tl-empty">
+                <p>No events match the current filters.</p>
+              </div>
+            )
+            : <div ref={containerRef} className="tl-canvas" />
+          }
+        </div>
+
+        {legendItems.length > 0 && (
+          <div className="tl-legend">
+            <span className="tl-control-label">
+              Color = {colorBy === 'category' ? 'category' : 'region'}
+            </span>
+            <div className="tl-legend-items">
+              {legendItems.map(({ label, color }) => (
+                <span key={label} className="tl-legend-item">
+                  <span className="tl-legend-dot" style={{ background: color }} />
+                  {label}
+                </span>
+              ))}
+            </div>
+            <span className="tl-circa-note">* approximate date</span>
+          </div>
+        )}
+      </div>
+
       {popover && (
         <TimelinePopover
           event={popover.event}
