@@ -121,14 +121,17 @@ export function buildTimelineData(
     const isRange = event.event_type === 'range' && event.end_year != null;
     const circa   = event.start_circa || event.end_circa;
     const color   = getItemColor(event, colorBy, catColorMap, regColorMap);
+    // Point events use type 'range' with a 1-year visual end so they render as
+    // a solid coloured bar identical to real range events instead of a bubble.
+    const end = isRange
+      ? yearToDate(event.end_year!, event.end_month ?? 12, event.end_day ?? 28)
+      : yearToDate(event.start_year + 1, event.start_month ?? 1, event.start_day ?? 1);
     return {
       id,
       content: `<span class="tl-label">${event.title}</span>`,
       start: yearToDate(event.start_year, event.start_month ?? 1, event.start_day ?? 1),
-      ...(isRange
-        ? { end: yearToDate(event.end_year!, event.end_month ?? 12, event.end_day ?? 28) }
-        : {}),
-      type: isRange ? 'range' : 'box',
+      end,
+      type: 'range',
       className: circa ? 'circa' : '',
       style: `background-color:${color};border-color:${color};`,
       ...(group != null ? { group } : {}),
