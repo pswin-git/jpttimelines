@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import events, items
+from app.routers import categories, events, items, regions, tags
 
 app = FastAPI(title="JPT Timelines API", version="0.1.0")
 
@@ -14,6 +14,9 @@ app.add_middleware(
 )
 
 app.include_router(events.router)
+app.include_router(regions.router)
+app.include_router(categories.router)
+app.include_router(tags.router)
 app.include_router(items.router)
 
 

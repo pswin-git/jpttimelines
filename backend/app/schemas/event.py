@@ -3,26 +3,11 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from app.schemas.category import CategoryOut
+from app.schemas.region import RegionOut
+from app.schemas.tag import TagOut
 
-class RegionOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-
-
-class CategoryOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-
-
-class TagOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
+__all__ = ["RegionOut", "CategoryOut", "TagOut", "EventCreate", "EventUpdate", "EventOut"]
 
 
 class EventBase(BaseModel):
