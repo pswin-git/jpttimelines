@@ -395,12 +395,9 @@ textarea { resize: vertical; }
 .tl-btn-group .btn:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-right-width: 1px; }
 
 .tl-canvas-wrap {
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - var(--header-h) - 56px); /* 56px ≈ controls bar */
 }
-
-.tl-canvas { height: 100%; }
 
 /* ─── Legend ─────────────────────────────────────────────────────────────────── */
 .tl-legend {
@@ -551,6 +548,9 @@ textarea { resize: vertical; }
   box-shadow: 0 0 0 2px rgba(255,255,255,0.4) !important;
 }
 .vis-item .vis-item-content { color: #fff !important; padding: 2px 6px !important; }
+/* Allow range item labels to overflow the bar so they stay readable when zoomed out */
+.vis-item.vis-range .vis-item-overflow { overflow: visible !important; }
+.vis-item.vis-range .vis-item-content  { overflow: visible !important; white-space: nowrap; }
 .tl-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; display: block; }
 
 /* Circa events — dashed border, slightly faded */

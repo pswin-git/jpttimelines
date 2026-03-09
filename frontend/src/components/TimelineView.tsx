@@ -49,7 +49,7 @@ export function TimelineView({ events, regions, categories }: Props) {
         zoomMax:         MS_PER_YEAR * 15000,
         start:           yearToDate(-600),
         end:             yearToDate(2100),
-        height:          '100%',
+        minHeight:       200,
         tooltip:         { followMouse: false, overflowMethod: 'cap' },
         format: {
           minorLabels: formatMinorLabel,
