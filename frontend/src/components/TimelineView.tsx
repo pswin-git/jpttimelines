@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Timeline } from 'vis-timeline/esnext';
-import { DataSet } from 'vis-data/esnext';
+import { Timeline } from 'vis-timeline/standalone';
+import { DataSet } from 'vis-data/standalone';
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
 import type { TimelineEvent, Region, Category } from '../types';
 import { TimelinePopover } from './TimelinePopover';
