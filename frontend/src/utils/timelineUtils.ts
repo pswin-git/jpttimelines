@@ -126,13 +126,13 @@ export function buildTimelineData(
     const end = isRange
       ? yearToDate(event.end_year!, event.end_month ?? 12, event.end_day ?? 28)
       : yearToDate(event.start_year + 1, event.start_month ?? 1, event.start_day ?? 1);
+    const label = circa ? `${event.title}*` : event.title;
     return {
       id,
-      content: `<span class="tl-label">${event.title}</span>`,
+      content: `<span class="tl-label">${label}</span>`,
       start: yearToDate(event.start_year, event.start_month ?? 1, event.start_day ?? 1),
       end,
       type: 'range',
-      className: circa ? 'circa' : '',
       style: `background-color:${color};border-color:${color};`,
       ...(group != null ? { group } : {}),
     };

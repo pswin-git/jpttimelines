@@ -196,6 +196,7 @@ export function TimelineView({ events, regions, categories }: Props) {
               </span>
             ))}
           </div>
+          <span className="tl-circa-note">* approximate date</span>
         </div>
       )}
 

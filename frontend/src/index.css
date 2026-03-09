@@ -431,6 +431,13 @@ textarea { resize: vertical; }
   flex-shrink: 0;
 }
 
+.tl-circa-note {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  align-self: center;
+}
+
 /* ─── Popover ────────────────────────────────────────────────────────────────── */
 .tl-popover {
   background: var(--surface2);
@@ -553,10 +560,6 @@ textarea { resize: vertical; }
 .vis-item.vis-range .vis-item-content  { overflow: visible !important; white-space: nowrap; }
 .tl-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; display: block; }
 
-/* Circa events — dashed border, slightly faded */
-.vis-item.circa { opacity: 0.75; }
-.vis-item.circa.vis-box   { border-style: dashed !important; }
-.vis-item.circa.vis-range { border-style: dashed !important; }
 
 /* BCE/CE boundary reference line — subtle, non-interactive */
 .vis-custom-time {
