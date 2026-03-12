@@ -1,13 +1,20 @@
+import os
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./jpttimelines.db"
+_database_url = os.environ.get("DATABASE_URL", "sqlite:///./jpttimelines.db")
+
+# Railway (and some older providers) issue postgres:// URLs; SQLAlchemy requires postgresql://
+if _database_url.startswith("postgres://"):
+    _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+
+_is_sqlite = _database_url.startswith("sqlite")
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    _database_url,
+    **({"connect_args": {"check_same_thread": False}} if _is_sqlite else {}),
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

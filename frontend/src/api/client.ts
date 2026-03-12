@@ -1,4 +1,6 @@
-const BASE = '/api';
+// In production VITE_API_URL is the Railway backend root (e.g. https://jpttimelines.railway.app).
+// Locally it is unset and requests go through the Vite dev-server proxy at /api.
+const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 export function getToken(): string | null {
   return localStorage.getItem('token');

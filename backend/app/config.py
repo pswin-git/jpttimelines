@@ -9,5 +9,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
 
+    # Set to the Vercel frontend URL in production (e.g. https://jpttimelines.vercel.app)
+    FRONTEND_URL: str = "http://localhost:5173"
+
 
 settings = Settings()
